@@ -1,11 +1,17 @@
 import cors from "cors";
 import express from "express";
-import { config } from "./config.js";
+import { isCorsOriginAllowed } from "./config.js";
 import { recordsRouter } from "./routes/records.js";
 
 export const app = express();
 
-app.use(cors({ origin: config.corsOrigins.includes("*") ? true : config.corsOrigins }));
+app.use(
+  cors({
+    origin(origin, callback) {
+      callback(null, isCorsOriginAllowed(origin));
+    },
+  }),
+);
 app.use(express.json({ limit: "5mb" }));
 
 app.get("/health", (_req, res) => {

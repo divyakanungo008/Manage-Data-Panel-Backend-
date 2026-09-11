@@ -19,13 +19,36 @@ function readPort() {
   return port;
 }
 
+function readCorsOrigins() {
+  return (process.env.CORS_ORIGIN || "http://localhost:5173,http://127.0.0.1:5173")
+    .split(",")
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+}
+
+function isManageDataVercelOrigin(origin) {
+  try {
+    const url = new URL(origin);
+    return (
+      url.protocol === "https:" &&
+      (url.hostname === "manage-data-panel.vercel.app" ||
+        (url.hostname.startsWith("manage-data-panel-") && url.hostname.endsWith(".vercel.app")))
+    );
+  } catch {
+    return false;
+  }
+}
+
+export function isCorsOriginAllowed(origin) {
+  if (!origin) return true;
+  if (config.corsOrigins.includes("*")) return true;
+  return config.corsOrigins.includes(origin) || isManageDataVercelOrigin(origin);
+}
+
 export const config = {
   port: readPort(),
   supabaseUrl: readRequiredEnv("SUPABASE_URL"),
   supabaseAnonKey: readRequiredEnv("SUPABASE_ANON_KEY"),
   supabaseServiceRoleKey: readRequiredEnv("SUPABASE_SERVICE_ROLE_KEY"),
-  corsOrigins: (process.env.CORS_ORIGIN || "http://localhost:5173,http://127.0.0.1:5173")
-    .split(",")
-    .map((origin) => origin.trim())
-    .filter(Boolean),
+  corsOrigins: readCorsOrigins(),
 };
